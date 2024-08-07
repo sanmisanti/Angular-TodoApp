@@ -1,13 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+
 
 import { Task} from '../../models/task.model'
 import { combineLatest } from 'rxjs';
+import { NonNullAssert } from '@angular/compiler';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
@@ -35,10 +38,28 @@ export class HomeComponent {
     }
   ]);
 
-  changeHandler(event: Event){
-    const input = event.target as HTMLInputElement;
-    const newTask = input.value;
-    this.addTask(newTask)
+  newTaskCtrl = new FormControl('', {
+    nonNullable: true,
+    validators: [
+      Validators.required,
+    ]
+  });
+
+  constructor(){
+    this.newTaskCtrl.valueChanges.subscribe(value => {
+      console.log(value)
+    })
+  }
+
+
+  changeHandler(){
+    if (this.newTaskCtrl.valid){
+      const value = this.newTaskCtrl.value.trim();
+      if (value !== ''){
+        this.addTask(value);
+        this.newTaskCtrl.setValue('');
+      }
+    }
   }
 
   addTask(title: string){
@@ -54,7 +75,7 @@ export class HomeComponent {
     this.tasks.update((tasks) => tasks.filter((_, i) => i !== index))
   }
 
-  toggleCompleteTask(index: number){
+  updateTask(index: number){
     this.tasks.update((tasks) => tasks.map((task, i) => i === index ? {...task, completed: !task.completed} : task))
   }
 }

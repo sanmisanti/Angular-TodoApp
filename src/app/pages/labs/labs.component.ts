@@ -1,10 +1,12 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+
 
 @Component({
   selector: 'app-labs',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './labs.component.html',
   styleUrl: './labs.component.css'
 })
@@ -21,10 +23,22 @@ export class LabsComponent {
   disabled = true;
   img = 'https://w3schools.com/howto/img_avatar.png';
 
-  person = {
-    name: "Santiago",
+  person = signal({
+    name: "santiago",
     age: 23,
     avatar: 'https://w3schools.com/howto/img_avatar.png'
+  });
+
+  colorCtrl = new FormControl();
+  widthCtrl = new FormControl(50, {
+    nonNullable:true,
+  });
+
+
+  constructor(){
+    this.colorCtrl.valueChanges.subscribe(value => {
+      console.log(value)
+    })
   }
 
   clickHandler() {
@@ -35,6 +49,26 @@ export class LabsComponent {
     const input = event.target as HTMLInputElement;
     const newValue = input.value
     this.name.set(newValue)
+  }
+  changeAge(event: Event){
+    const input = event.target as HTMLInputElement;
+    const newValue = input.value
+    this.person.update(p => {
+      return {
+        ...p,
+        age: parseInt(newValue)
+      }
+    })
+  }
+  changeName(event: Event){
+    const input = event.target as HTMLInputElement;
+    const newValue = input.value
+    this.person.update(p => {
+      return {
+        ...p,
+        name: newValue
+      }
+    })
   }
   keyDownHandler(event: KeyboardEvent){
     const input = event.target as HTMLInputElement;
