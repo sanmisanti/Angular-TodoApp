@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 
 
@@ -77,5 +77,12 @@ export class HomeComponent {
 
   updateTask(index: number){
     this.tasks.update((tasks) => tasks.map((task, i) => i === index ? {...task, completed: !task.completed} : task))
+  }
+  updateTaskEditingMode(index: number){
+    this.tasks.update((tasks) => tasks.map((task, i) => i === index ? {...task, editing: true} : {...task, editing: false}))
+  }
+  updateTaskText(index: number, event: Event){
+    const input = event.target as HTMLInputElement
+    this.tasks.update((tasks) => tasks.map((task, i) => i === index ? {...task, title: input.value, editing: false} : task))
   }
 }
