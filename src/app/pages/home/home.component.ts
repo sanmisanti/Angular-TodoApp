@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, input, signal } from '@angular/core';
+
+import { Component, computed, effect, inject, Injector, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 
 
@@ -10,33 +10,25 @@ import { NonNullAssert } from '@angular/compiler';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
 export class HomeComponent {
-  tasks = signal<Task[]>([
-    {
-      id: Date.now(),
-      title: "Instalar el Angular CLI",
-      completed: false
-    },
-    {
-      id: Date.now(),
-      title: "Crear el proyecto",
-      completed: false
-    },
-    {
-      id: Date.now(),
-      title: "Crear componentes",
-      completed: false
-    },
-    {
-      id: Date.now(),
-      title: "Crear servicio",
-      completed: false
+  tasks = signal<Task[]>([]);
+  filter = signal<'all' | 'pending' | 'completed'>('all');
+  tasksByFilter = computed(() => {
+    const filter = this.filter();
+    const tasks = this.tasks();
+
+    if (filter === 'pending'){
+      return tasks.filter(task => !task.completed)
     }
-  ]);
+    if (filter === 'completed'){
+      return tasks.filter(task => task.completed)
+    }
+    return tasks;
+  })
 
   newTaskCtrl = new FormControl('', {
     nonNullable: true,
@@ -45,10 +37,23 @@ export class HomeComponent {
     ]
   });
 
-  constructor(){
-    this.newTaskCtrl.valueChanges.subscribe(value => {
-      console.log(value)
-    })
+  injector = inject(Injector)
+
+
+  ngOnInit(){
+    const tasks = localStorage.getItem('tasks');
+    if (tasks){
+      this.tasks.set(JSON.parse(tasks))
+    }
+    this.trackTasks();
+  }
+
+  trackTasks (){
+    effect(() => {
+      const tasks = this.tasks();
+      console.log(tasks)
+      localStorage.setItem('tasks', JSON.stringify(tasks))
+    }, {injector: this.injector})
   }
 
 
@@ -84,5 +89,9 @@ export class HomeComponent {
   updateTaskText(index: number, event: Event){
     const input = event.target as HTMLInputElement
     this.tasks.update((tasks) => tasks.map((task, i) => i === index ? {...task, title: input.value, editing: false} : task))
+  }
+
+  changeFilter(filter: 'all' | 'pending' | 'completed'){
+    this.filter.set(filter)
   }
 }
